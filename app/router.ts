@@ -1,7 +1,9 @@
 import { Application } from 'egg';
 
-export default (app: Application) => {
-  const { controller, router } = app;
+const v1Path = 'v1';
 
-  router.get('/', controller.home.index);
+export default (app: Application) => {
+    const { controller, router } = app;
+
+    router.resources('users', `/auth/${v1Path}/users`, controller.v1.users);
 };
