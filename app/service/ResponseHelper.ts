@@ -1,4 +1,4 @@
-import { Service } from 'egg';
+import { Service, Context } from 'egg';
 
 interface Response {
     success: boolean;
@@ -33,5 +33,16 @@ export default class ResponseHelper extends Service {
             statusCode,
             ...data,
         };
+    }
+
+    /**
+     * @description 同一封装响应response.
+     * @param {Context} ctx - Request context.
+     * @param {StatueCode} statusCode - Http status code.
+     * @param {any} data - Custom response body.
+     */
+    public handleResponse(ctx: Context, statusCode: StatueCode = 200, data: any = {}): void {
+        ctx.status = statusCode;
+        ctx.body = this.getResponseByStatusCode(statusCode, data);
     }
 }
