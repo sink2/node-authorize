@@ -16,6 +16,12 @@ export default (appInfo: EggAppInfo) => {
     const bizConfig = {
         sourceUrl: `https://github.com/eggjs/examples/tree/master/${appInfo.name}`,
     };
+    // Disable csrf
+    config.security = {
+        csrf: {
+            ignoreJSON: true,
+        },
+    };
 
     config.sequelize = {
         dialect: 'mysql',
