@@ -1,7 +1,9 @@
 import { EggAppConfig, EggAppInfo, PowerPartial, Context } from 'egg';
+import * as DbConfig from '../database/config.json';
 
 export default (appInfo: EggAppInfo) => {
     const config = {} as PowerPartial<EggAppConfig>;
+    const env = 'development';
 
     // override config from framework / plugin
     // use for cookie sign key, should change to your own and keep security
@@ -17,11 +19,11 @@ export default (appInfo: EggAppInfo) => {
 
     config.sequelize = {
         dialect: 'mysql',
-        host: '127.0.0.1',
-        port: 3306,
-        database: 'authorize',
-        username: 'root',
-        password: 'root',
+        host: DbConfig[env].host,
+        port: DbConfig[env].port,
+        database: DbConfig[env].database,
+        username: DbConfig[env].username,
+        password: DbConfig[env].password,
         define: {
             underscored: false,
         },
