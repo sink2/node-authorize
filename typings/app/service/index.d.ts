@@ -3,11 +3,9 @@
 
 import 'egg';
 import ExportResponseHelper from '../../../app/service/ResponseHelper';
-import ExportTest from '../../../app/service/Test';
 
 declare module 'egg' {
   interface IService {
     responseHelper: ExportResponseHelper;
-    test: ExportTest;
   }
 }
