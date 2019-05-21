@@ -12,6 +12,7 @@ logs/
 *.js
 !.autod.conf.js
 !database/migrations/*
+!database/seeders/*
 
 app/**/*.js
 test/**/*.js
