@@ -1,6 +1,6 @@
 import { Controller } from 'egg';
 import * as crypto from 'crypto';
-import { pick } from 'lodash';
+import { pick, omit } from 'lodash';
 import { commonIndexRule } from '../validateConfig';
 
 const indexRule = {
@@ -62,9 +62,26 @@ export default class UsersController extends Controller {
                 description,
                 salt,
             });
-            service.responseHelper.handleResponse(ctx, 201, {
-                data: pick(result, ['name', 'description', 'createdAt', 'updatedAt']),
-            });
+            const data = omit(result.dataValues, ['password', 'salt']);
+            service.responseHelper.handleResponse(ctx, 201, { data });
+        } catch (e) {
+            ctx.logger.error(e);
+            service.responseHelper.handleResponse(ctx, 500);
+        }
+    }
+
+    public async destroy() {
+        const { ctx } = this;
+        const { model, service } = ctx;
+        const { id } = ctx.params;
+        try {
+            const isExist = (await model.Users.count({ where: { id } })) > 0;
+            if (!isExist) {
+                service.responseHelper.handleResponse(ctx, 404);
+            } else {
+                const result = await model.Users.destroy({ where: { id } });
+                service.responseHelper.handleResponse(ctx, 200, result);
+            }
         } catch (e) {
             ctx.logger.error(e);
             service.responseHelper.handleResponse(ctx, 500);
