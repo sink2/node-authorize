@@ -46,6 +46,7 @@ export default class UsersController extends Controller {
         const { model, service } = ctx;
         ctx.validate(createRule, ctx.request.body);
         const { name, password, description } = ctx.request.body;
+        const additionalInfo = omit(ctx.request.body, ['name', 'password', 'description']);
         // If the user is already exist.
         const isExist = (await model.Users.count({ where: { name } })) > 0;
         if (isExist) {
@@ -61,9 +62,16 @@ export default class UsersController extends Controller {
                 password: saltPassword,
                 description,
                 salt,
+                additionalInfo: JSON.stringify(additionalInfo),
             });
-            const data = omit(result.dataValues, ['password', 'salt']);
-            service.responseHelper.handleResponse(ctx, 201, { data });
+            const data = omit(result.dataValues, ['password', 'salt', 'additionalInfo']);
+            const additional = JSON.parse(result.additionalInfo);
+            service.responseHelper.handleResponse(ctx, 201, {
+                data: {
+                    ...additional,
+                    ...data,
+                },
+            });
         } catch (e) {
             ctx.logger.error(e);
             service.responseHelper.handleResponse(ctx, 500);
