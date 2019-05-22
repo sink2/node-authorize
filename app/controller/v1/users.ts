@@ -33,8 +33,17 @@ export default class UsersController extends Controller {
         // Prevent extra parameters from getting database fields.
         const queryParams = pick(ctx.request.query, Object.keys(indexRule));
         try {
-            const result = await service.queryHelper.queryAll(model.Users, queryParams, ['id', 'name', 'description', 'createdAt', 'updatedAt']);
-            service.responseHelper.handleResponse(ctx, 200, result);
+            const result = await service.queryHelper.queryAll(model.Users, queryParams, ['id', 'name', 'description', 'createdAt', 'updatedAt', 'additionalInfo']);
+            const response = {
+                ...result,
+                data: result.data.map(d => {
+                    return {
+                        ...JSON.parse(d.additionalInfo),
+                        ...omit(d.dataValues, 'additionalInfo'),
+                    };
+                }),
+            };
+            service.responseHelper.handleResponse(ctx, 200, response);
         } catch (e) {
             ctx.logger.error(e);
             service.responseHelper.handleResponse(ctx, 500);
