@@ -38,9 +38,11 @@
         "rc-js-utils": "^0.1.3"
     },
     "devDependencies": {
+        "@types/bluebird": "^3.5.26",
         "@types/mocha": "^2.2.40",
         "@types/node": "^7.0.12",
         "@types/supertest": "^2.0.0",
+        "@types/validator": "^10.11.0",
         "autod": "^3.0.1",
         "autod-egg": "^1.1.0",
         "babel-register": "^6.26.0",
