@@ -1,11 +1,19 @@
 import { Controller } from 'egg';
 import * as crypto from 'crypto';
 import { pick } from 'lodash';
+import { commonIndexRule } from '../validateConfig';
+
+const indexRule = {
+    ...commonIndexRule,
+    id: 'string?',
+    name: { type: 'string?', max: 64 },
+    description: { type: 'string?', max: 256 },
+};
 
 const createRule = {
     name: { type: 'string', max: 64 },
     password: { type: 'string', max: 256 },
-    description: { type: 'string', max: 256, required: false },
+    description: { type: 'string?', max: 256 },
 };
 
 const encryptPassword = (password: string, salt: string = crypto.randomBytes(32).toString()) => {
@@ -18,10 +26,20 @@ const encryptPassword = (password: string, salt: string = crypto.randomBytes(32)
 };
 
 export default class UsersController extends Controller {
-    // public async index() {
-    //     const { ctx } = this;
-    //     ctx.body = await ctx.service.test.sayHi('egg');
-    // }
+    public async index() {
+        const { ctx } = this;
+        const { service, model } = ctx;
+        ctx.validate(indexRule, ctx.request.query);
+        // Prevent extra parameters from getting database fields.
+        const queryParams = pick(ctx.request.query, Object.keys(indexRule));
+        try {
+            const result = await service.queryHelper.queryAll(model.Users, queryParams, ['id', 'name', 'description', 'createdAt', 'updatedAt']);
+            service.responseHelper.handleResponse(ctx, 200, result);
+        } catch (e) {
+            ctx.logger.error(e);
+            service.responseHelper.handleResponse(ctx, 500);
+        }
+    }
 
     public async create() {
         const { ctx } = this;
@@ -48,6 +66,7 @@ export default class UsersController extends Controller {
                 data: pick(result, ['name', 'description', 'createdAt', 'updatedAt']),
             });
         } catch (e) {
+            ctx.logger.error(e);
             service.responseHelper.handleResponse(ctx, 500);
         }
     }
