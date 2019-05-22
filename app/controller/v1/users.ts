@@ -16,6 +16,12 @@ const createRule = {
     description: { type: 'string?', max: 256 },
 };
 
+const updateRule = {
+    name: { type: 'string', max: 64 },
+    password: { type: 'string', max: 256 },
+    description: { type: 'string?', max: 256 },
+}
+
 const encryptPassword = (password: string, salt: string = crypto.randomBytes(32).toString()) => {
     const md5 = crypto.createHash('md5');
     const sha1 = crypto.createHash('sha1');
@@ -33,17 +39,29 @@ export default class UsersController extends Controller {
         // Prevent extra parameters from getting database fields.
         const queryParams = pick(ctx.request.query, Object.keys(indexRule));
         try {
-            const result = await service.queryHelper.queryAll(model.Users, queryParams, ['id', 'name', 'description', 'createdAt', 'updatedAt', 'additionalInfo']);
+            const convertAdditionalInfo = record => ({
+                ...JSON.parse(record.additionalInfo),
+                ...omit(record, 'additionalInfo'),
+            });
+            const result = await service.queryHelper.queryAll(model.Users, queryParams, [], ['password', 'salt'], convertAdditionalInfo);
+            service.responseHelper.handleResponse(ctx, 200, result);
+        } catch (e) {
+            ctx.logger.error(e);
+            service.responseHelper.handleResponse(ctx, 500);
+        }
+    }
+
+    public async show() {
+        const { ctx } = this;
+        const { service, model } = ctx;
+        const { id } = ctx.params;
+        try {
+            const result = await service.queryHelper.queryOne(model.Users, id, [], ['password', 'salt']);
             const response = {
-                ...result,
-                data: result.data.map(d => {
-                    return {
-                        ...JSON.parse(d.additionalInfo),
-                        ...omit(d.dataValues, 'additionalInfo'),
-                    };
-                }),
+                ...JSON.parse(result.additionalInfo),
+                ...omit(result, 'additionalInfo'),
             };
-            service.responseHelper.handleResponse(ctx, 200, response);
+            service.responseHelper.handleResponse(ctx, 200, { data: response });
         } catch (e) {
             ctx.logger.error(e);
             service.responseHelper.handleResponse(ctx, 500);
@@ -71,16 +89,35 @@ export default class UsersController extends Controller {
                 password: saltPassword,
                 description,
                 salt,
-                additionalInfo: JSON.stringify(additionalInfo),
+                additionalInfo,
             });
             const data = omit(result.dataValues, ['password', 'salt', 'additionalInfo']);
-            const additional = JSON.parse(result.additionalInfo);
+            const additional = result.additionalInfo;
             service.responseHelper.handleResponse(ctx, 201, {
                 data: {
                     ...additional,
                     ...data,
                 },
             });
+        } catch (e) {
+            ctx.logger.error(e);
+            service.responseHelper.handleResponse(ctx, 500);
+        }
+    }
+
+    public async update() {
+        const { ctx } = this;
+        const { service, model } = ctx;
+        ctx.validate(updateRule, ctx.request.query);
+        const { id } = ctx.params;
+        try {
+            const isExist = (await model.Users.count({ where: { id } })) > 0;
+            if (!isExist) {
+                service.responseHelper.handleResponse(ctx, 404);
+            } else {
+
+                service.responseHelper.handleResponse(ctx, 200);
+            }
         } catch (e) {
             ctx.logger.error(e);
             service.responseHelper.handleResponse(ctx, 500);
