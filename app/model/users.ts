@@ -8,6 +8,7 @@ export default app => {
         password: { type: STRING(256), allowNull: false },
         description: STRING(256),
         salt: STRING(256),
+        additionalInfo: STRING,
         // timestamps
         createdAt: DATE,
         updatedAt: DATE,
